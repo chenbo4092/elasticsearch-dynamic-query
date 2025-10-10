@@ -162,8 +162,15 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
      * @return 当前查询对象
      */
     public S weightFunction(double weight) {
-        WeightBuilder weightBuilder = new WeightBuilder().setWeight((float) weight);
-        this.functionScoreFunctions.add(new FunctionScoreFunction(weightBuilder));
+        return weightFunction(true, weight);
+    }
+
+    public S weightFunction(boolean enable, double weight) {
+        if (enable) {
+            WeightBuilder weightBuilder = new WeightBuilder().setWeight((float) weight);
+            this.functionScoreFunctions.add(new FunctionScoreFunction(weightBuilder));
+        }
+
         return (S) this;
     }
 
@@ -180,10 +187,20 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
                                 FilterOperators operator,
                                 R value,
                                 double weight) {
-        // 构建过滤条件
-        QueryBuilder filter = createFilterQuery(getPropertyFunc, operator, value);
-        WeightBuilder weightBuilder = new WeightBuilder().setWeight((float) weight);
-        this.functionScoreFunctions.add(new FunctionScoreFunction(filter, weightBuilder));
+       return weightFunction(true, getPropertyFunc, operator, value, weight);
+    }
+
+    public <R> S weightFunction(boolean enable,GetPropertyFunction <T, R> getPropertyFunc,
+                                FilterOperators operator,
+                                R value,
+                                double weight) {
+        if(enable){
+            // 构建过滤条件
+            QueryBuilder filter = createFilterQuery(getPropertyFunc, operator, value);
+            WeightBuilder weightBuilder = new WeightBuilder().setWeight((float) weight);
+            this.functionScoreFunctions.add(new FunctionScoreFunction(filter, weightBuilder));
+        }
+
         return (S) this;
     }
 
@@ -195,10 +212,17 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
      * @return 当前查询对象
      */
     public <R> S fieldValueFactorFunction(GetPropertyFunction<T, R> getPropertyFunc, double factor) {
-        String fieldName = getColumnName(getPropertyFunc);
-        FieldValueFactorFunctionBuilder functionBuilder = new FieldValueFactorFunctionBuilder(fieldName)
-                .factor((float) factor);
-        this.functionScoreFunctions.add(new FunctionScoreFunction(functionBuilder));
+        return fieldValueFactorFunction(true, getPropertyFunc, factor);
+    }
+
+    public <R> S fieldValueFactorFunction(boolean enable, GetPropertyFunction<T, R> getPropertyFunc, double factor) {
+        if(enable){
+            String fieldName = getColumnName(getPropertyFunc);
+            FieldValueFactorFunctionBuilder functionBuilder = new FieldValueFactorFunctionBuilder(fieldName)
+                    .factor((float) factor);
+            this.functionScoreFunctions.add(new FunctionScoreFunction(functionBuilder));
+        }
+
         return (S) this;
     }
 
@@ -215,12 +239,22 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
                                           FilterOperators operator,
                                           R value,
                                           double factor) {
-        // 构建过滤条件
-        QueryBuilder filter = createFilterQuery(getPropertyFunc, operator, value);
-        String fieldName = getColumnName(getPropertyFunc);
-        FieldValueFactorFunctionBuilder functionBuilder = new FieldValueFactorFunctionBuilder(fieldName)
-                .factor((float) factor);
-        this.functionScoreFunctions.add(new FunctionScoreFunction(filter, functionBuilder));
+        return fieldValueFactorFunction(true, getPropertyFunc, operator, value, factor);
+    }
+
+    public <R> S fieldValueFactorFunction(boolean enable,GetPropertyFunction<T, R> getPropertyFunc,
+                                          FilterOperators operator,
+                                          R value,
+                                          double factor) {
+        if(enable){
+            // 构建过滤条件
+            QueryBuilder filter = createFilterQuery(getPropertyFunc, operator, value);
+            String fieldName = getColumnName(getPropertyFunc);
+            FieldValueFactorFunctionBuilder functionBuilder = new FieldValueFactorFunctionBuilder(fieldName)
+                    .factor((float) factor);
+            this.functionScoreFunctions.add(new FunctionScoreFunction(filter, functionBuilder));
+        }
+
         return (S) this;
     }
 
@@ -230,8 +264,15 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
      * @return 当前查询对象
      */
     public S randomFunction() {
-        RandomScoreFunctionBuilder functionBuilder = new RandomScoreFunctionBuilder();
-        this.functionScoreFunctions.add(new FunctionScoreFunction(functionBuilder));
+       return randomFunction(true);
+    }
+
+    public S randomFunction(boolean  enable) {
+        if(enable){
+            RandomScoreFunctionBuilder functionBuilder = new RandomScoreFunctionBuilder();
+            this.functionScoreFunctions.add(new FunctionScoreFunction(functionBuilder));
+        }
+
         return (S) this;
     }
 
@@ -246,10 +287,19 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
     public <R> S randomFunction(GetPropertyFunction<T, R> getPropertyFunc,
                                 FilterOperators operator,
                                 R value) {
-        // 构建过滤条件
-        QueryBuilder filter = createFilterQuery(getPropertyFunc, operator, value);
-        RandomScoreFunctionBuilder functionBuilder = new RandomScoreFunctionBuilder();
-        this.functionScoreFunctions.add(new FunctionScoreFunction(filter, functionBuilder));
+       return randomFunction(true, getPropertyFunc, operator, value);
+    }
+
+    public <R> S randomFunction(boolean enable,GetPropertyFunction<T, R> getPropertyFunc,
+                                FilterOperators operator,
+                                R value) {
+        if(enable){
+            // 构建过滤条件
+            QueryBuilder filter = createFilterQuery(getPropertyFunc, operator, value);
+            RandomScoreFunctionBuilder functionBuilder = new RandomScoreFunctionBuilder();
+            this.functionScoreFunctions.add(new FunctionScoreFunction(filter, functionBuilder));
+        }
+
         return (S) this;
     }
 
@@ -260,25 +310,27 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
      * @return 当前查询对象
      */
     public S boostMode(FunctionBoostMode boostMode) {
-        switch (boostMode) {
-            case REPLACE:
-                this.boostMode = CombineFunction.REPLACE;
-                break;
-            case SUM:
-                this.boostMode = CombineFunction.SUM;
-                break;
-            case AVG:
-                this.boostMode = CombineFunction.AVG;
-                break;
-            case MAX:
-                this.boostMode = CombineFunction.MAX;
-                break;
-            case MIN:
-                this.boostMode = CombineFunction.MIN;
-                break;
-            case MULTIPLY:
-            default:
-                this.boostMode = CombineFunction.MULTIPLY;
+        return boostMode(true, boostMode);
+    }
+
+    public S boostMode(boolean enable,FunctionBoostMode boostMode) {
+        if(enable){
+            switch (boostMode) {
+                case REPLACE:
+                    this.boostMode = CombineFunction.REPLACE;
+                    break;
+                case SUM:
+                    this.boostMode = CombineFunction.SUM;
+                    break;
+                case AVG:
+                    this.boostMode = CombineFunction.AVG;
+                    break;
+                case MAX:
+                    this.boostMode = CombineFunction.MAX;
+                    break;
+                case MIN:
+                    this.boostMode = CombineFunction.MIN;
+            }
         }
 
         return (S) this;
@@ -291,28 +343,35 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
      * @return 当前查询对象
      */
     public S scoreMode(FunctionScoreMode scoreMode) {
-        switch (scoreMode) {
-            case MULTIPLY:
-                this.scoreMode = FunctionScoreQuery.ScoreMode.MULTIPLY;
-                break;
-            case SUM:
-                this.scoreMode = FunctionScoreQuery.ScoreMode.SUM;
-                break;
-            case AVG:
-                this.scoreMode = FunctionScoreQuery.ScoreMode.AVG;
-                break;
-            case MAX:
-                this.scoreMode = FunctionScoreQuery.ScoreMode.MAX;
-                break;
-            case MIN:
-                this.scoreMode = FunctionScoreQuery.ScoreMode.MIN;
-                break;
-            case FIRST:
-                this.scoreMode = FunctionScoreQuery.ScoreMode.FIRST;
-                break;
-            default:
-                this.scoreMode = FunctionScoreQuery.ScoreMode.MULTIPLY;
+       return scoreMode(true, scoreMode);
+    }
+
+    public S scoreMode(boolean enable,FunctionScoreMode scoreMode) {
+        if(enable){
+            switch (scoreMode) {
+                case MULTIPLY:
+                    this.scoreMode = FunctionScoreQuery.ScoreMode.MULTIPLY;
+                    break;
+                case SUM:
+                    this.scoreMode = FunctionScoreQuery.ScoreMode.SUM;
+                    break;
+                case AVG:
+                    this.scoreMode = FunctionScoreQuery.ScoreMode.AVG;
+                    break;
+                case MAX:
+                    this.scoreMode = FunctionScoreQuery.ScoreMode.MAX;
+                    break;
+                case MIN:
+                    this.scoreMode = FunctionScoreQuery.ScoreMode.MIN;
+                    break;
+                case FIRST:
+                    this.scoreMode = FunctionScoreQuery.ScoreMode.FIRST;
+                    break;
+                default:
+                    this.scoreMode = FunctionScoreQuery.ScoreMode.MULTIPLY;
+            }
         }
+
         return (S) this;
     }
 
@@ -323,7 +382,13 @@ public abstract class BaseDynamicQuery<T, S extends BaseFilterGroup<T, S>> exten
      * @return 当前查询对象
      */
     public S maxBoost(double maxBoost) {
-        this.maxBoost = (float) maxBoost;
+       return maxBoost(true, maxBoost);
+    }
+
+    public S maxBoost(boolean enable,double maxBoost) {
+        if(enable){
+            this.maxBoost = (float) maxBoost;
+        }
         return (S) this;
     }
 
